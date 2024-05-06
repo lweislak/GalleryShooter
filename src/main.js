@@ -11,6 +11,7 @@ let config = {
     render: {
         pixelArt: true  // prevent pixel art from getting blurred when scaled
     },
+    fps: {forceSetTimeOut: true, target:30},
     width: 640,  
     height: 640,
     scene: [FirstScene] //TODO: Add 3 scenes, one for each level
