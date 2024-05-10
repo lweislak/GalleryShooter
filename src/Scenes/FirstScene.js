@@ -107,7 +107,8 @@ class FirstScene extends Phaser.Scene {
 
         my.sprite.bullet = my.sprite.bullet.filter((bullet) => bullet.y > -(bullet.displayHeight/2));
 
-        this.checkCollision();
+        this.checkCollision(my.sprite.regularDuckGroup);
+        this.checkCollision(my.sprite.yellowDuckGroup);
         
         for(let bullet of my.sprite.bullet) {
             bullet.y -= this.bulletSpeed;
@@ -167,17 +168,18 @@ class FirstScene extends Phaser.Scene {
         return lanes[Math.floor(Math.random()*lanes.length)];
     }
 
-    checkCollision() {  //TODO: Pass in duck var depending on type of duck
+    checkCollision(ducks) {
         let my = this.my;
         for (let bullet of my.sprite.bullet) {
-            for(let duck of my.sprite.regularDuckGroup.getChildren()) {
+            for(let duck of ducks.getChildren()) {
             if (this.collides(duck, bullet)) {
                 // clear out bullet -- put y offscreen, will get reaped next update
                 bullet.y = -100;
                 duck.visible = false;
                 duck.x = -100;
                 // Update score
-                this.score += this.regularDuckPoints;
+                if (ducks == my.sprite.regularDuckGroup) {this.score += this.regularDuckPoints;}
+                else {this.score += this.yellowDuckPoints;}
                 this.updateScore();
             }
         }
