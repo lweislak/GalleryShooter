@@ -7,11 +7,13 @@ class FirstScene extends Phaser.Scene {
         this.playerY = 600;
 
         this.my.sprite.bullet = [];
-        this.maxBullets = 10; //Max amount of bullets that can appear on screen
+        this.maxBullets = 5; //Max amount of bullets that can appear on screen
         this.score = 0;
 
         this.regularDuckCooldown = 60; //Number of update() calls to wait before making a new duck
         this.regularDuckCooldownCounter = 0;
+        this.yellowDuckCooldown = 80;
+        this.yellowDuckCooldownCounter = 0;
     }
 
     preload() {
@@ -19,7 +21,9 @@ class FirstScene extends Phaser.Scene {
 
         this.load.image("player", "crosshair_outline_small.png");
         this.load.image("bullet", "icon_bullet_silver_short.png");
+        this.load.image("enemyBullet", "icon_bullet_gold_short.png");
         this.load.image("regularDuck", "duck_outline_brown.png");
+        this.load.image("yellowDuck", "duck_outline_yellow.png");
 
         this.load.image("gallery_shooter_tiles", "spritesheet_stall.png"); //Tile sheet   
         this.load.tilemapTiledJSON("map", "GalleryShooterMap.json");
@@ -54,18 +58,32 @@ class FirstScene extends Phaser.Scene {
         my.sprite.player = this.add.sprite(this.playerX, this.playerY, "player");
 
         this.bulletSpeed = 5;
-        this.regularDuckSpeed = 3;
+        this.regularDuckSpeed = 2; //Note: could these be variables of the group?
+        this.yellowDuckSpeed = 3;
+        this.regularDuckPoints = 10;
+        this.yellowDuckPoints = 25;
 
         //Group of regular duck enemies
         my.sprite.regularDuckGroup = this.add.group({
             defaultKey: "regularDuck",
-            maxSize: 6 
+            maxSize: 6
         })
         my.sprite.regularDuckGroup.createMultiple({
             active: false,
             key: my.sprite.regularDuckGroup.defaultKey,
-            repeat: my.sprite.regularDuckGroup.maxSize-1,
-            scorePoints: 10
+            repeat: my.sprite.regularDuckGroup.maxSize-1
+        });
+
+        
+        //Group of yellow duck enemies
+        my.sprite.yellowDuckGroup = this.add.group({
+            defaultKey: "yellowDuck",
+            maxSize: 6
+        })
+        my.sprite.yellowDuckGroup.createMultiple({
+            active: false,
+            key: my.sprite.yellowDuckGroup.defaultKey,
+            repeat: my.sprite.yellowDuckGroup.maxSize-1
         });
 
         //Display Score
@@ -83,12 +101,13 @@ class FirstScene extends Phaser.Scene {
     update() {
         let my = this.my;
 
-        this.updateDucks();
+        this.updateDucks(my.sprite.regularDuckGroup, this.regularDuckCooldownCounter--);
+        this.updateDucks(my.sprite.yellowDuckGroup, this.yellowDuckCooldownCounter--);
         this.checkKeyPress();
 
         my.sprite.bullet = my.sprite.bullet.filter((bullet) => bullet.y > -(bullet.displayHeight/2));
 
-        this.checkCollision(); //TODO: Fix
+        this.checkCollision();
         
         for(let bullet of my.sprite.bullet) {
             bullet.y -= this.bulletSpeed;
@@ -113,22 +132,25 @@ class FirstScene extends Phaser.Scene {
     }
 
     //Function to control enemy duck placement
-    updateDucks() {
+    updateDucks(ducks, counter) {
         let my = this.my;
-        this.regularDuckCooldownCounter--;
 
-        if(this.regularDuckCooldownCounter < 0) {
-            let duck = my.sprite.regularDuckGroup.getFirstDead();
+        if(counter < 0) {
+            let duck = ducks.getFirstDead();
             if (duck != null) {
                 duck.active = true;
                 duck.visible = true;
                 duck.x = 640;
                 duck.y = this.pickRandomLane();
-                this.regularDuckCooldownCounter = this.regularDuckCooldown;
+                if(ducks == my.sprite.regularDuckGroup) { //check which cooldown to update (janky and bad)
+                    this.regularDuckCooldownCounter = this.regularDuckCooldown;
+                } else {
+                    this.yellowDuckCooldownCounter = this.yellowDuckCooldown;
+                }
             }
         }
 
-        for(let duck of my.sprite.regularDuckGroup.getChildren()) {
+        for(let duck of ducks.getChildren()) {
             if (duck.x < 0) { //if duck reaches the end of the screen
                 duck.active = false;
                 duck.visible = false;
@@ -136,6 +158,7 @@ class FirstScene extends Phaser.Scene {
         }
 
         my.sprite.regularDuckGroup.incX(-this.regularDuckSpeed); //movement
+        my.sprite.yellowDuckGroup.incX(-this.yellowDuckSpeed); //movement
     }
 
     //Helper function that randomly chooses where ducks appear
@@ -144,18 +167,20 @@ class FirstScene extends Phaser.Scene {
         return lanes[Math.floor(Math.random()*lanes.length)];
     }
 
-    checkCollision() {  //TODO: Fix this!
+    checkCollision() {  //TODO: Pass in duck var depending on type of duck
         let my = this.my;
         for (let bullet of my.sprite.bullet) {
-            if (this.collides(my.sprite.regularDuckGroup, bullet)) {
+            for(let duck of my.sprite.regularDuckGroup.getChildren()) {
+            if (this.collides(duck, bullet)) {
                 // clear out bullet -- put y offscreen, will get reaped next update
                 bullet.y = -100;
-                my.sprite.regularDuckGroup.visible = false;
-                my.sprite.regularDuckGroup.x = -100;
+                duck.visible = false;
+                duck.x = -100;
                 // Update score
-                this.myScore += my.sprite.regularDuckGroup.scorePoints;
+                this.score += this.regularDuckPoints;
                 this.updateScore();
             }
+        }
         }
     }
 
