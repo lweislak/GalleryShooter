@@ -10,6 +10,7 @@ class FirstScene extends Phaser.Scene {
         this.my.sprite.enemyBullet = [];
         this.maxBullets = 5; //Max amount of bullets that can appear on screen
         this.score = 0;
+        this.health = 3;
 
         this.regularDuckCooldown = 60; //Number of update() calls to wait before making a new duck
         this.regularDuckCooldownCounter = 0;
@@ -96,6 +97,15 @@ class FirstScene extends Phaser.Scene {
             }
         });
 
+        //Display Score
+        my.text.health = this.add.text(550, 70, "Health: " + this.health + "/3", {
+            fontFamily: 'Times, serif',
+            fontSize: 24,
+            wordWrap: {
+                 width: 60
+            }
+        });
+
         //document.getElementById('description').innerHTML = '<h2>A - Left // D - Right // SPACE - Fire</h2>'
     }
 
@@ -106,19 +116,20 @@ class FirstScene extends Phaser.Scene {
         this.updateDucks(my.sprite.yellowDuckGroup, this.yellowDuckCooldownCounter--);
         this.checkKeyPress();
 
-        this.fireEnemyBullet(); //TODO: Fix
+        this.fireEnemyBullet(); //TODO: Wait between calls
 
         my.sprite.bullet = my.sprite.bullet.filter((bullet) => bullet.y > -(bullet.displayHeight/2));
         my.sprite.enemyBullet = my.sprite.enemyBullet.filter((ememyBullet) => ememyBullet.y > (ememyBullet.displayHeight/2));
 
         this.checkEnemyCollision(my.sprite.regularDuckGroup);
         this.checkEnemyCollision(my.sprite.yellowDuckGroup);
-        
+        this.checkPlayerCollision();
+
         for(let bullet of my.sprite.bullet) {
             bullet.y -= this.bulletSpeed;
         }
-        for(let b of my.sprite.enemyBullet) { //TODO: Fix
-            b.y -= this.bulletSpeed;
+        for(let bullet of this.my.sprite.enemyBullet) {
+            bullet.y += this.bulletSpeed;
         }
     }
 
@@ -139,11 +150,13 @@ class FirstScene extends Phaser.Scene {
         }
     }
 
-    //TEMP FUNCTION
+    //Function that fires enemies' bullets at random
+    //Note: This is a super janky way to do this with random numbers
     fireEnemyBullet() {
+        let random = Math.floor(Math.random()*100); //get random number between 0 - 99
         for(let duck of this.my.sprite.yellowDuckGroup.getChildren()) {
-            if (duck.active == true) {
-                this.add.sprite(duck.x, duck.y+(duck.displayHeight/2), "enemyBullet");
+            if (duck.active == true && (random == 42 || random == 66)) { //check if duck is on screen and random val is 42 or 66
+                this.my.sprite.enemyBullet.push(this.add.sprite(duck.x, duck.y+(duck.displayHeight/2), "enemyBullet"));
             }
         }
     }
@@ -184,6 +197,23 @@ class FirstScene extends Phaser.Scene {
         return lanes[Math.floor(Math.random()*lanes.length)];
     }
 
+    //TODO: Check player collision
+    checkPlayerCollision() {
+        let my = this.my;
+        for (let bullet of my.sprite.enemyBullet) {
+            if (this.collides(my.sprite.player, bullet)) {
+                // clear out bullet -- put y offscreen, will get reaped next update
+                bullet.y = -100;
+                // Update health
+                this.health--;
+                this.updateHealth();
+                if(this.health == 0) { //if health reaches 0, game over
+                    //this.scene.start("gameOver", {score: this.score});
+                }
+            }
+        }
+    }
+
     checkEnemyCollision(ducks) {
         let my = this.my;
         for (let bullet of my.sprite.bullet) {
@@ -211,7 +241,10 @@ class FirstScene extends Phaser.Scene {
         
     //Helper function to update score
     updateScore() {
-        let my = this.my;
-        my.text.score.setText("Score: " + this.score);
+        this.my.text.score.setText("Score: " + this.score);
+    }
+
+    updateHealth() {
+        this.my.text.health.setText("Health: " + this.health + "/3");
     }
 }
