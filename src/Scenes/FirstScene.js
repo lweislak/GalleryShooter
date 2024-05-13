@@ -7,6 +7,7 @@ class FirstScene extends Phaser.Scene {
         this.playerY = 600;
 
         this.my.sprite.bullet = [];
+        this.my.sprite.enemyBullet = [];
         this.maxBullets = 5; //Max amount of bullets that can appear on screen
         this.score = 0;
 
@@ -105,13 +106,19 @@ class FirstScene extends Phaser.Scene {
         this.updateDucks(my.sprite.yellowDuckGroup, this.yellowDuckCooldownCounter--);
         this.checkKeyPress();
 
-        my.sprite.bullet = my.sprite.bullet.filter((bullet) => bullet.y > -(bullet.displayHeight/2));
+        this.fireEnemyBullet(); //TODO: Fix
 
-        this.checkCollision(my.sprite.regularDuckGroup);
-        this.checkCollision(my.sprite.yellowDuckGroup);
+        my.sprite.bullet = my.sprite.bullet.filter((bullet) => bullet.y > -(bullet.displayHeight/2));
+        my.sprite.enemyBullet = my.sprite.enemyBullet.filter((ememyBullet) => ememyBullet.y > (ememyBullet.displayHeight/2));
+
+        this.checkEnemyCollision(my.sprite.regularDuckGroup);
+        this.checkEnemyCollision(my.sprite.yellowDuckGroup);
         
         for(let bullet of my.sprite.bullet) {
             bullet.y -= this.bulletSpeed;
+        }
+        for(let b of my.sprite.enemyBullet) { //TODO: Fix
+            b.y -= this.bulletSpeed;
         }
     }
 
@@ -128,6 +135,15 @@ class FirstScene extends Phaser.Scene {
                 my.sprite.bullet.push(this.add.sprite(
                     my.sprite.player.x, my.sprite.player.y-(my.sprite.player.displayHeight/2), "bullet")
                 );
+            }
+        }
+    }
+
+    //TEMP FUNCTION
+    fireEnemyBullet() {
+        for(let duck of this.my.sprite.yellowDuckGroup.getChildren()) {
+            if (duck.active == true) {
+                this.add.sprite(duck.x, duck.y+(duck.displayHeight/2), "enemyBullet");
             }
         }
     }
@@ -168,7 +184,7 @@ class FirstScene extends Phaser.Scene {
         return lanes[Math.floor(Math.random()*lanes.length)];
     }
 
-    checkCollision(ducks) {
+    checkEnemyCollision(ducks) {
         let my = this.my;
         for (let bullet of my.sprite.bullet) {
             for(let duck of ducks.getChildren()) {
@@ -186,16 +202,16 @@ class FirstScene extends Phaser.Scene {
         }
     }
 
-        // A center-radius AABB collision check. From ArrayBoom.js
-        collides(a, b) {
-            if (Math.abs(a.x - b.x) > (a.displayWidth/2 + b.displayWidth/2)) return false;
-            if (Math.abs(a.y - b.y) > (a.displayHeight/2 + b.displayHeight/2)) return false;
-            return true;
-        }
+    // A center-radius AABB collision check. From ArrayBoom.js
+    collides(a, b) {
+        if (Math.abs(a.x - b.x) > (a.displayWidth/2 + b.displayWidth/2)) return false;
+        if (Math.abs(a.y - b.y) > (a.displayHeight/2 + b.displayHeight/2)) return false;
+        return true;
+    }
         
-        //Helper function to update score
-        updateScore() {
-            let my = this.my;
-            my.text.score.setText("Score: " + this.score);
-        }
+    //Helper function to update score
+    updateScore() {
+        let my = this.my;
+        my.text.score.setText("Score: " + this.score);
+    }
 }
