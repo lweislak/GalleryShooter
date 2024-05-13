@@ -1,18 +1,22 @@
 class GameOver extends Phaser.Scene {
     constructor() {
         super("gameOver");
-        //this.finalScore = score;
     }
  
      preload() {
 
      }
- 
-     create() {
+    
+     //Resource: https://dev.to/ceceliacreates/working-with-scenes-and-data-in-phaser-2pn4
+     init (data) {
+        this.finalScore = data.score;
+     }
 
+     create() {
+        
      }
  
      update() {
-        //console.log("score:",this.finalScore);
+        
      }
  }

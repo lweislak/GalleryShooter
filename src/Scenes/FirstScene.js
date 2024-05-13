@@ -208,7 +208,7 @@ class FirstScene extends Phaser.Scene {
                 this.health--;
                 this.updateHealth();
                 if(this.health == 0) { //if health reaches 0, game over
-                    //this.scene.start("gameOver", {score: this.score});
+                    this.scene.start("gameOver", {score: this.score});
                 }
             }
         }
