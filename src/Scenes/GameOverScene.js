@@ -13,10 +13,12 @@ class GameOver extends Phaser.Scene {
      }
 
      create() {
-        
+        this.rKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
      }
  
      update() {
-        
+        if (Phaser.Input.Keyboard.JustDown(this.rKey)) {
+            this.scene.start("first");
+        }
      }
  }

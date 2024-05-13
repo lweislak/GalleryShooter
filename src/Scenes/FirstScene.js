@@ -9,8 +9,6 @@ class FirstScene extends Phaser.Scene {
         this.my.sprite.bullet = [];
         this.my.sprite.enemyBullet = [];
         this.maxBullets = 5; //Max amount of bullets that can appear on screen
-        this.score = 0;
-        this.health = 3;
 
         this.regularDuckCooldown = 60; //Number of update() calls to wait before making a new duck
         this.regularDuckCooldownCounter = 0;
@@ -37,18 +35,16 @@ class FirstScene extends Phaser.Scene {
     create() {
         let my = this.my; //Create an alias to this.my for readability
 
+        this.init_game(); //reset game variables
+
         this.map = this.add.tilemap("map", 16, 16, 20, 20);
         this.tileset = this.map.addTilesetImage("gallery-shooter-packed", "gallery_shooter_tiles");
         // Create a tile map layer
         this.woodLayer = this.map.createLayer("Wood", this.tileset, 0, 0);
         this.grassBackgroundLayer = this.map.createLayer("GrassBackground", this.tileset, 0, 0);
         this.grassLayer = this.map.createLayer("Grass", this.tileset, 0, 0);
-        //this.curtainsLowerLayer = this.map.createLayer("CurtainsLower", this.tileset, 0, 0);
-        //this.curtainsUpperLayer = this.map.createLayer("CurtainsUpper", this.tileset, 0, 0);
         //Set scale for scene
         this.woodLayer.setScale(2.0);
-        //this.curtainsUpperLayer.setScale(2.0);
-        //this.curtainsLowerLayer.setScale(2.0);
         this.grassLayer.setScale(2.0);
         this.grassBackgroundLayer.setScale(2.0);
 
@@ -75,7 +71,6 @@ class FirstScene extends Phaser.Scene {
             key: my.sprite.regularDuckGroup.defaultKey,
             repeat: my.sprite.regularDuckGroup.maxSize-1
         });
-
         
         //Group of yellow duck enemies
         my.sprite.yellowDuckGroup = this.add.group({
@@ -87,6 +82,12 @@ class FirstScene extends Phaser.Scene {
             key: my.sprite.yellowDuckGroup.defaultKey,
             repeat: my.sprite.yellowDuckGroup.maxSize-1
         });
+
+        //Place curtains above background and ducks, but below score
+        this.curtainsLowerLayer = this.map.createLayer("CurtainsLower", this.tileset, 0, 0);
+        this.curtainsUpperLayer = this.map.createLayer("CurtainsUpper", this.tileset, 0, 0);
+        this.curtainsUpperLayer.setScale(2.0);
+        this.curtainsLowerLayer.setScale(2.0);
 
         //Display Score
         my.text.score = this.add.text(550, 5, "Score: " + this.score, {
@@ -107,6 +108,12 @@ class FirstScene extends Phaser.Scene {
         });
 
         //document.getElementById('description').innerHTML = '<h2>A - Left // D - Right // SPACE - Fire</h2>'
+    }
+
+    //Reset game variables between scenes
+    init_game() {
+        this.score = 0;
+        this.health = 3;
     }
 
     update() {
@@ -147,6 +154,7 @@ class FirstScene extends Phaser.Scene {
                     my.sprite.player.x, my.sprite.player.y-(my.sprite.player.displayHeight/2), "bullet")
                 );
             }
+            this.updateLayers();
         }
     }
 
@@ -158,7 +166,17 @@ class FirstScene extends Phaser.Scene {
             if (duck.active == true && (random == 42 || random == 66)) { //check if duck is on screen and random val is 42 or 66
                 this.my.sprite.enemyBullet.push(this.add.sprite(duck.x, duck.y+(duck.displayHeight/2), "enemyBullet"));
             }
+            this.updateLayers();
         }
+    }
+
+    //Update curtain and text display
+    //When bullets are fired, they will be placed below the curtains
+    updateLayers() {
+        this.curtainsLowerLayer.depth = 10; //Set depth of curtains and text to be higher than background
+        this.curtainsUpperLayer.depth = 10;
+        this.my.text.score.depth = 11;
+        this.my.text.health.depth = 11;
     }
 
     //Function to control enemy duck placement
@@ -197,7 +215,7 @@ class FirstScene extends Phaser.Scene {
         return lanes[Math.floor(Math.random()*lanes.length)];
     }
 
-    //TODO: Check player collision
+    //Checks player collision
     checkPlayerCollision() {
         let my = this.my;
         for (let bullet of my.sprite.enemyBullet) {
