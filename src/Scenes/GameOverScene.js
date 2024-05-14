@@ -28,7 +28,7 @@ class GameOver extends Phaser.Scene {
         });
 
         //Display restart
-        this.my.text.restart = this.add.text(130, 400, "Press 'r' to restart!", {
+        this.my.text.restart = this.add.text(140, 400, "Press R to restart!", {
             fontFamily: 'Times, serif',
             fontSize: 50,
             color: 'black'
