@@ -28,10 +28,11 @@ class FirstScene extends Phaser.Scene {
         this.load.image("gallery_shooter_tiles", "spritesheet_stall.png"); //Tile sheet   
         this.load.tilemapTiledJSON("map", "GalleryShooterMap.json");
 
-        //this.load.audio();
+        this.load.audio("duckCollisionSound", "impactMetal_medium_001.ogg");
+        this.load.audio("playerCollisionSound", "impactGlass_medium_003.ogg");
+
     } 
 
-    //TODO: Fix curtains in scene
     create() {
         let my = this.my; //Create an alias to this.my for readability
 
@@ -106,8 +107,6 @@ class FirstScene extends Phaser.Scene {
                  width: 60
             }
         });
-
-        //document.getElementById('description').innerHTML = '<h2>A - Left // D - Right // SPACE - Fire</h2>'
     }
 
     //Reset game variables between scenes
@@ -215,7 +214,7 @@ class FirstScene extends Phaser.Scene {
         return lanes[Math.floor(Math.random()*lanes.length)];
     }
 
-    //Checks player collision
+    //Checks if bullet has hit player
     checkPlayerCollision() {
         let my = this.my;
         for (let bullet of my.sprite.enemyBullet) {
@@ -225,6 +224,10 @@ class FirstScene extends Phaser.Scene {
                 // Update health
                 this.health--;
                 this.updateHealth();
+                //Play sound
+                this.sound.play("playerCollisionSound", {
+                    volume: 0.5
+                });
                 if(this.health == 0) { //if health reaches 0, game over
                     this.scene.start("gameOver", {score: this.score});
                 }
@@ -232,6 +235,7 @@ class FirstScene extends Phaser.Scene {
         }
     }
 
+    //Check if duck has been hit
     checkEnemyCollision(ducks) {
         let my = this.my;
         for (let bullet of my.sprite.bullet) {
@@ -245,6 +249,10 @@ class FirstScene extends Phaser.Scene {
                 if (ducks == my.sprite.regularDuckGroup) {this.score += this.regularDuckPoints;}
                 else {this.score += this.yellowDuckPoints;}
                 this.updateScore();
+                //Play sound
+                this.sound.play("duckCollisionSound", {
+                    volume: 0.5
+                });
             }
         }
         }
